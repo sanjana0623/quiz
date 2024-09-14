@@ -1,0 +1,176 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+
+public class AdvancedQuizApplication {
+
+    // Inner class for representing a quiz question
+    static class Question {
+        private String questionText;
+        private List<String> options;
+        private int correctAnswerIndex;
+        private String difficulty;  // Added difficulty level
+
+        public Question(String questionText, List<String> options, int correctAnswerIndex, String difficulty) {
+            this.questionText = questionText;
+            this.options = options;
+            this.correctAnswerIndex = correctAnswerIndex;
+            this.difficulty = difficulty;
+        }
+
+        public String getQuestionText() {
+            return questionText;
+        }
+
+        public List<String> getOptions() {
+            return options;
+        }
+
+        public boolean isAnswerCorrect(int answerIndex) {
+            return answerIndex == correctAnswerIndex;
+        }
+
+        public String getDifficulty() {
+            return difficulty;
+        }
+    }
+
+    // Inner class for managing a collection of questions
+    static class Quiz {
+        private List<Question> questions;
+        private String category;
+
+        public Quiz(String category) {
+            this.questions = new ArrayList<>();
+            this.category = category;
+        }
+
+        public void addQuestion(Question question) {
+            questions.add(question);
+        }
+
+        public List<Question> getQuestions() {
+            return questions;
+        }
+
+        public String getCategory() {
+            return category;
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // User profile
+        System.out.print("Enter your name: ");
+        String userName = scanner.nextLine();
+
+        // Choose category
+        System.out.println("Choose a category:");
+        System.out.println("1. General Knowledge");
+        System.out.println("2. Science");
+        System.out.println("3. History");
+        int categoryChoice = getValidAnswer(scanner, 3);
+        String[] categories = {"General Knowledge", "Science", "History"};
+        String chosenCategory = categories[categoryChoice];
+
+        // Create quiz and add questions based on category
+        Quiz quiz = new Quiz(chosenCategory);
+        addSampleQuestions(quiz);
+
+        // Conduct quiz
+        int score = 0;
+        Timer timer = new Timer();
+        for (Question question : quiz.getQuestions()) {
+            System.out.println("\nCategory: " + quiz.getCategory());
+            System.out.println("Difficulty: " + question.getDifficulty());
+            System.out.println(question.getQuestionText());
+            for (String option : question.getOptions()) {
+                System.out.println(option);
+            }
+
+            // Timer task to handle question timeout
+            final boolean[] answered = {false};
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    if (!answered[0]) {
+                        System.out.println("Time's up!");
+                        answered[0] = true;
+                    }
+                }
+            };
+            timer.schedule(task, 10000); // 10 seconds to answer
+
+            int userAnswer = getValidAnswer(scanner, question.getOptions().size());
+            answered[0] = true; // Mark as answered
+
+            if (question.isAnswerCorrect(userAnswer)) {
+                System.out.println("Correct!");
+                score++;
+            } else {
+                System.out.println("Wrong! The correct answer was: " + (question.getCorrectAnswerIndex() + 1));
+            }
+        }
+        timer.cancel();
+
+        // Display score
+        System.out.println("\n" + userName + ", your final score is: " + score + "/" + quiz.getQuestions().size());
+        scanner.close();
+    }
+
+    // Method for validating user input
+    private static int getValidAnswer(Scanner scanner, int numberOfOptions) {
+        int answer = -1;
+        while (answer < 1 || answer > numberOfOptions) {
+            System.out.print("Enter your answer (1-" + numberOfOptions + "): ");
+            try {
+                answer = Integer.parseInt(scanner.nextLine()) - 1;
+            } catch (NumberFormatException e) {
+                // Invalid input, prompt again
+                System.out.println("Invalid input. Please enter a number.");
+            }
+        }
+        return answer;
+    }
+
+    // Add sample questions to quiz
+    private static void addSampleQuestions(Quiz quiz) {
+        if (quiz.getCategory().equals("General Knowledge")) {
+            quiz.addQuestion(new Question(
+                "What is the largest ocean on Earth?",
+                List.of("1. Atlantic Ocean", "2. Indian Ocean", "3. Arctic Ocean", "4. Pacific Ocean"),
+                3, "Easy"
+            ));
+            quiz.addQuestion(new Question(
+                "Who wrote 'To Kill a Mockingbird'?",
+                List.of("1. Harper Lee", "2. Mark Twain", "3. J.K. Rowling", "4. Ernest Hemingway"),
+                0, "Medium"
+            ));
+        } else if (quiz.getCategory().equals("Science")) {
+            quiz.addQuestion(new Question(
+                "What is the chemical symbol for water?",
+                List.of("1. O2", "2. CO2", "3. H2O", "4. NaCl"),
+                2, "Easy"
+            ));
+            quiz.addQuestion(new Question(
+                "What planet is known as the Red Planet?",
+                List.of("1. Venus", "2. Mars", "3. Jupiter", "4. Saturn"),
+                1, "Medium"
+            ));
+        } else if (quiz.getCategory().equals("History")) {
+            quiz.addQuestion(new Question(
+                "Who was the first President of the United States?",
+                List.of("1. Abraham Lincoln", "2. George Washington", "3. Thomas Jefferson", "4. John Adams"),
+                1, "Easy"
+            ));
+            quiz.addQuestion(new Question(
+                "In which year did World War I begin?",
+                List.of("1. 1912", "2. 1914", "3. 1916", "4. 1918"),
+                1, "Hard"
+            ));
+        }
+    }
+}
